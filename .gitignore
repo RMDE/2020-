@@ -1,0 +1,4 @@
+test.*
+test*.*
+model.py
+__pycache__
