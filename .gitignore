@@ -2,3 +2,5 @@ test.*
 test*.*
 model.py
 __pycache__
+*.txt
+log
