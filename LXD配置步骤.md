@@ -65,14 +65,14 @@
       ```bash
       #复制库
       cp /usr/local/lib/libzebra.* /lib
-      配置用户
+      #配置用户
       groupadd quagga
       useradd quagga -g quagga
       #启动
       zebra -d
       #查看守护进程
       ps -aux | grep zebra
-     ```
+      ```
 - 打包模板
   ```bash
   lxc publish R1 --alias Router_Ubuntu1804 --public
@@ -87,8 +87,116 @@
   sudo lxc launch local:HostImage C1
   ```
   修改软件源，并安装net-tools,然后导出镜像
-  ```
+  ```bash
   lxc publish C1 --alias Client_Ubuntu1804 --public
   ```
+- 配置网络C1R1
+    - 客户机C1连接路由器R1,创建网络并绑定网卡
+      ```bash
+      lxc network create C1R1 ipv6.address=none ipv4.address=192.168.174.1/24
+      lxc network attach C1R1 C1 eth0
+      lxc network attach C1R1 R1 eth1
+      ```
+    - 进入R1,分配地址
+      ```bash
+      ip addr add 192.168.174.2/24 dev eth1
+      ip link set eht1 up # 启动网卡
+      ```
+    - 进入C1，分配地址
+      ```bash
+      ip addr add 192.168.174.1/24 dev eth0
+      ip link set eth0 up
+      # 替换默认网关为R1
+      route delete default
+      route add default gw 192.168.174.2
+      ```
+- 配置网络R1R2
+    - 创建网络R1R1并绑定网卡
+      ```bash
+      lxc network create R1R2 ipv6.address=none ipv4.address=192.168.177.1/24
+      lxc network attach R1R2 R1 eth2
+      lxc network attach R1R2 R2 eth2
+      ```
+    - 进入R1,分配地址
+      ```bash
+      ip addr add 192.168.177.1/24 dev eth2
+      ip link set eht2 up # 启动网卡
+      ```
+    - 进入R2,分配地址
+      ```bash
+      ip addr add 192.168.177.2/24 dev eth2
+      ip link set eht2 up # 启动网卡
+      ```
+    - 查看网络配置情况
+      ```bash
+      lxc network list
+      ```
+- 配置固定地址
+    修改文件
+    ```bash
+    vim /etc/netplan/x-lxc.yaml
+    ```
+    修改后应用更改
+    ```bash
+    netplan apply
+    ```
+    - C1
+      ```yaml
+      network:
+          version: 2
+          ethernets:
+                  eth0:
+                      dhcp4: false
+                      addresses: [192.168.174.1/24]
+                      gateway4: 192.168.174.2
+      ```
+    - R1
+      ```yaml
+      network:
+          version: 2
+          ethernets:
+                  eth0:
+                          dhcp4: true
+                          dhcp-identifier: mac
+                  eth1:
+                          dhcp4: false
+                          addresses: [192.168.174.2/24]
+                  eth2:
+                          dhcp4: false
+                          addresses: [192.168.177.1/24]
+                  eth3:
+                          dhcp4: false
+                          addresses: [192.168.179.2/24]
+      ```
+    其余路由器及客户机文件内容类似
+- 配置OSPF
+    - 修改路由器的ospf配置文件
+      ```ospf
+      ! -*- ospf of R1 -*-
+      !
+      ! OSPFd sample configuration file
+      !
+      !
+      hostname Router01
+      password zebra
+      !
+      router ospf
+          network 192.168.174.0/24 area 1
+          network 192.168.177.0/24 area 0
+          network 192.168.179.0/24 area 0
+      !
+      log stdout
+      ```
+    - 在三台路由器中启动zebra和ospfd
+      ```bash
+      zebra -d
+      ospfd -d
+      ```
+    - 查看邻居数据
+      ```bash
+      vtysh
+      show ip ospf neighbor
+      show ip ospf database
+      ```
 
-   
+

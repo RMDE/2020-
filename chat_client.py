@@ -32,9 +32,8 @@ def receive():
     	msg.setText("receive : "+str(data))
     	# print("recfrom"+str(address)+": "+str(data))
 
-def init(ip,port):
+def init():
     global server,Window
-    address = (ip,port)
     server = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
 def gui():
@@ -42,9 +41,9 @@ def gui():
     Window = Gui()
     Window.resize(600,400)
     Window.center()
-    Window.setWindowTitle('Server聊天窗口')
+    Window.setWindowTitle('Client聊天窗口')
     Window.setWindowOpacity(0.97)
-    lbl = Window.Label("对象: 127.0.0.1 : 8888",100,30,50,400,"black",20)
+    lbl = Window.Label("对象: 127.0.0.1 : 9090",100,30,50,400,"black",20)
     msg = Window.Label("NULL",50,100,50,400,"black",20,"white")
     snd = Window.Input(50,200,h=50,w=400)
     btn = Window.Button('发送',470,200,send,50,70,"white","#6DDF6D",30)
@@ -54,11 +53,9 @@ def gui():
 if __name__=='__main__':
     global Window,ip,port
     app = QApplication(sys.argv)
-    _ip = '127.0.0.1'
-    _port = 8888
     ip = '127.0.0.1'
     port = 9090
-    init(_ip,_port)
+    init()
     gui()
     print("start")
     th = threading.Thread(target=receive)

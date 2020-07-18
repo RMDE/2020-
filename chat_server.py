@@ -22,7 +22,7 @@ def send():
         Error(Window,"Message send fails")
 
 def receive():
-    global server,msg,ip,port,Window
+    global server,msg,ip,port,Window,lbl
     while Window.flag:
     	data,address = server.recvfrom(SIZE)
     	if Window.flag == False:
@@ -30,6 +30,7 @@ def receive():
     	ip = address[0]
     	port = address[1]
     	msg.setText("receive : "+str(data))
+    	lbl.setText("对象 : "+str(ip)+" : "+str(port))
     	# print("recfrom"+str(address)+": "+str(data))
 
 def init(ip,port):
@@ -42,13 +43,13 @@ def init(ip,port):
         Error(Window,"socket fails!")
 
 def gui():
-    global msg,snd,Window
+    global msg,snd,lbl,Window
     Window = Gui()
     Window.resize(600,400)
     Window.center()
     Window.setWindowTitle('Server聊天窗口')
     Window.setWindowOpacity(0.97)
-    lbl = Window.Label("对象: 127.0.0.1 : 8888",100,30,50,400,"black",20)
+    lbl = Window.Label("对象: ",100,30,50,400,"black",20)
     msg = Window.Label("NULL",50,100,50,400,"black",20,"white")
     snd = Window.Input(50,200,h=50,w=400)
     btn = Window.Button('发送',470,200,send,50,70,"white","#6DDF6D",30)
@@ -58,8 +59,6 @@ def gui():
 if __name__=='__main__':
     global Window,ip,port
     app = QApplication(sys.argv)
-    ip = '127.0.0.1'
-    port = 8888
     _ip = '127.0.0.1'
     _port = 9090
     init(_ip,_port)
